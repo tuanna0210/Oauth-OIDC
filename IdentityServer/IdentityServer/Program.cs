@@ -1,5 +1,7 @@
 using Duende.IdentityServer.Models;
 using Duende.IdentityServer.Test;
+using IdentityServer.Database;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 
@@ -17,6 +19,13 @@ namespace IdentityServer
 
             builder.Services.AddRazorPages();
 
+            builder.Services.AddDbContext<ApplicationDbContext>(options =>
+            {
+                options.UseSqlite(connectionString, opt => opt.MigrationsAssembly(migrationsAssembly));
+            });
+            builder.Services.AddIdentity<IdentityUser, IdentityRole>()
+                .AddEntityFrameworkStores<ApplicationDbContext>();
+
             builder.Services.AddIdentityServer(options =>
             {
                 options.Events.RaiseFailureEvents = true;
@@ -25,9 +34,9 @@ namespace IdentityServer
                 options.Events.RaiseInformationEvents = true;
                 options.EmitStaticAudienceClaim = true;
             })
-            .AddTestUsers(Config.Users)
             .AddConfigurationStore(options => options.ConfigureDbContext = b => b.UseSqlite(connectionString, opt => opt.MigrationsAssembly(migrationsAssembly)))
-            .AddOperationalStore(options => options.ConfigureDbContext = b => b.UseSqlite(connectionString, opt => opt.MigrationsAssembly(migrationsAssembly)));
+            .AddOperationalStore(options => options.ConfigureDbContext = b => b.UseSqlite(connectionString, opt => opt.MigrationsAssembly(migrationsAssembly)))
+            .AddAspNetIdentity<IdentityUser>();
 
             var app = builder.Build();
 
